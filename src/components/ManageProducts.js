@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import api from "../api/api";
 import "./ManageProducts.css";
 
@@ -12,36 +12,39 @@ export default function ManageProducts() {
   const [stock, setStock] = useState("");
   const [search, setSearch] = useState("");
 
-  // 🔄 جلب المنتجات (مع debounce)
-  const fetchProducts = async () => {
+  // 🔄 جلب المنتجات (clean + stable)
+  const fetchProducts = useCallback(async () => {
     try {
       const res = await api.get(`products/?search=${search}`);
       setProducts(res.data);
     } catch (err) {
       console.error(err);
     }
-  };
-
-
-
-  useEffect(() => {
-    const timeout = setTimeout(fetchProducts, 300);
-    return () => clearTimeout(timeout);
   }, [search]);
 
-  // ➕ إضافة
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchProducts();
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [search, fetchProducts]);
+
+  // ➕ إضافة منتج
   const addProduct = async () => {
     try {
       await api.post("products/", { name, price, stock });
       setShowAddModal(false);
-      setName(""); setPrice(""); setStock("");
-      fetchProducts(); // ✅ دلوقتي fetchProducts موجودة
+      setName("");
+      setPrice("");
+      setStock("");
+      fetchProducts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ✏️ تعديل
+  // ✏️ فتح تعديل
   const openEditModal = (product) => {
     setEditProduct(product);
     setName(product.name);
@@ -50,23 +53,31 @@ export default function ManageProducts() {
     setShowEditModal(true);
   };
 
+  // 💾 حفظ تعديل
   const saveEdit = async () => {
     try {
-      await api.put(`products/${editProduct.id}/`, { name, price, stock });
+      await api.put(`products/${editProduct.id}/`, {
+        name,
+        price,
+        stock,
+      });
+
       setShowEditModal(false);
       setEditProduct(null);
-      setName(""); setPrice(""); setStock("");
-      fetchProducts(); // ✅ موجودة
+      setName("");
+      setPrice("");
+      setStock("");
+      fetchProducts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🗑 حذف
+  // 🗑 حذف منتج
   const deleteProduct = async (id) => {
     try {
       await api.delete(`products/${id}/`);
-      fetchProducts(); // ✅ موجودة
+      fetchProducts();
     } catch (err) {
       console.error(err);
     }
@@ -97,6 +108,7 @@ export default function ManageProducts() {
             <th>إجراء</th>
           </tr>
         </thead>
+
         <tbody>
           {products.map((p) => (
             <tr key={p.id}>
@@ -104,7 +116,7 @@ export default function ManageProducts() {
               <td>{p.price} ج</td>
               <td>{p.stock}</td>
               <td className="options-cell">
-                <div className="dropdown" onClick={e => e.stopPropagation()}>
+                <div className="dropdown">
                   <button className="dropbtn">⋮</button>
                   <div className="dropdown-content">
                     <button onClick={() => openEditModal(p)}>تعديل</button>
@@ -117,33 +129,76 @@ export default function ManageProducts() {
         </tbody>
       </table>
 
-      {/* 🪟 مودال الإضافة */}
+      {/* ➕ Add Modal */}
       {showAddModal && (
         <div className="modal">
           <div className="modal-content">
             <h3>إضافة منتج</h3>
-            <input placeholder="اسم المنتج" value={name} onChange={(e) => setName(e.target.value)} />
-            <input placeholder="السعر" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-            <input placeholder="المخزون" type="number" value={stock} onChange={(e) => setStock(e.target.value)} />
+
+            <input
+              placeholder="اسم المنتج"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <input
+              placeholder="السعر"
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+
+            <input
+              placeholder="المخزون"
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+            />
+
             <div className="modal-actions">
               <button onClick={addProduct}>حفظ</button>
-              <button className="cancel" onClick={() => setShowAddModal(false)}>إلغاء</button>
+              <button className="cancel" onClick={() => setShowAddModal(false)}>
+                إلغاء
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🪟 مودال التعديل */}
+      {/* ✏️ Edit Modal */}
       {showEditModal && (
         <div className="modal">
           <div className="modal-content">
             <h3>تعديل المنتج</h3>
-            <input placeholder="اسم المنتج" value={name} onChange={(e) => setName(e.target.value)} />
-            <input placeholder="السعر" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-            <input placeholder="المخزون" type="number" value={stock} onChange={(e) => setStock(e.target.value)} />
+
+            <input
+              placeholder="اسم المنتج"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <input
+              placeholder="السعر"
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+
+            <input
+              placeholder="المخزون"
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+            />
+
             <div className="modal-actions">
               <button onClick={saveEdit}>حفظ</button>
-              <button className="cancel" onClick={() => setShowEditModal(false)}>إلغاء</button>
+              <button
+                className="cancel"
+                onClick={() => setShowEditModal(false)}
+              >
+                إلغاء
+              </button>
             </div>
           </div>
         </div>
