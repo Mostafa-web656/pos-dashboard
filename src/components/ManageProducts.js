@@ -22,11 +22,7 @@ export default function ManageProducts() {
     }
   };
 
-useEffect(() => {
-  fetch("https://mostafasaeed.pythonanywhere.com/api/products/")
-    .then(res => res.json())
-    .then(data => console.log(data));
-}, []);
+
 
   useEffect(() => {
     const timeout = setTimeout(fetchProducts, 300);
