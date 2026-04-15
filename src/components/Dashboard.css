@@ -1,0 +1,16 @@
+.dashboard {
+  padding: 30px;
+}
+
+.cards {
+  display: flex;
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  width: 250px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #ddd;
+}
