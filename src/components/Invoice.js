@@ -3,7 +3,9 @@ import api from "../api/api";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
-  const [selected, setSelected] = useState(null); // ✅ كان ناقص عندك
+
+  // ✅ مهم جدًا: ده كان ناقص عندك
+  const [selected, setSelected] = useState(null);
 
   const [filters, setFilters] = useState({
     day: "",
@@ -11,7 +13,6 @@ export default function InvoicesPage() {
     year: "",
   });
 
-  // ✅ fetchInvoices ثابت عشان eslint
   const fetchInvoices = useCallback(async () => {
     try {
       let url = "sales/invoices/?";
@@ -23,11 +24,11 @@ export default function InvoicesPage() {
       const res = await api.get(url);
       setInvoices(res.data || []);
     } catch (error) {
-      console.error("Error fetching invoices:", error);
+      console.error(error);
     }
   }, [filters]);
 
-  // ✅ صح 100% dependency
+  // ✅ مهم: يخلي الفلاتر تشتغل تلقائي
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
@@ -45,32 +46,11 @@ export default function InvoicesPage() {
 
       {/* Filters */}
       <div style={styles.filter}>
-        <input
-          name="day"
-          type="number"
-          placeholder="Day"
-          value={filters.day}
-          onChange={handleChange}
-          style={styles.input}
-        />
+        <input name="day" type="number" placeholder="Day" value={filters.day} onChange={handleChange} style={styles.input} />
 
-        <input
-          name="month"
-          type="number"
-          placeholder="Month"
-          value={filters.month}
-          onChange={handleChange}
-          style={styles.input}
-        />
+        <input name="month" type="number" placeholder="Month" value={filters.month} onChange={handleChange} style={styles.input} />
 
-        <input
-          name="year"
-          type="number"
-          placeholder="Year"
-          value={filters.year}
-          onChange={handleChange}
-          style={styles.input}
-        />
+        <input name="year" type="number" placeholder="Year" value={filters.year} onChange={handleChange} style={styles.input} />
 
         <button onClick={fetchInvoices} style={styles.searchBtn}>
           Search
@@ -81,20 +61,13 @@ export default function InvoicesPage() {
       <div style={styles.grid}>
         {invoices.length > 0 ? (
           invoices.map((inv) => (
-            <div
-              key={inv.id}
-              style={styles.card}
-              onClick={() => setSelected(inv)}
-            >
+            <div key={inv.id} style={styles.card} onClick={() => setSelected(inv)}>
               <h3>Invoice #{inv.id}</h3>
               <p>
-                {inv.created_at
-                  ? new Date(inv.created_at).toLocaleString()
-                  : ""}
+                {inv.created_at ? new Date(inv.created_at).toLocaleString() : ""}
               </p>
               <p>
-                <strong>Customer:</strong>{" "}
-                {inv.customer_name || "Walk-in Customer"}
+                <strong>Customer:</strong> {inv.customer_name || "Walk-in Customer"}
               </p>
               <h2 style={{ color: "#10b981" }}>
                 {Number(inv.total || 0).toFixed(2)} EGP
@@ -110,33 +83,27 @@ export default function InvoicesPage() {
       {selected && (
         <div style={styles.modalBg} onClick={() => setSelected(null)}>
           <div style={styles.invoice} onClick={(e) => e.stopPropagation()}>
-
             <h2 style={{ textAlign: "center" }}>POS STORE</h2>
 
-            <p style={{ textAlign: "center" }}>
-              Invoice #{selected.id}
-            </p>
+            <p style={{ textAlign: "center" }}>Invoice #{selected.id}</p>
 
             <p style={{ textAlign: "center" }}>
-              {selected.created_at
-                ? new Date(selected.created_at).toLocaleString()
-                : ""}
+              {selected.created_at ? new Date(selected.created_at).toLocaleString() : ""}
             </p>
 
             <div style={styles.customerBox}>
               <p>
-                <strong>Customer:</strong>{" "}
-                {selected.customer_name || "Walk-in Customer"}
+                <strong>Customer:</strong> {selected.customer_name || "Walk-in Customer"}
               </p>
               <p>
-                <strong>Phone:</strong>{" "}
-                {selected.customer_phone || "-"}
+                <strong>Phone:</strong> {selected.customer_phone || "-"}
               </p>
             </div>
 
             <hr />
 
             <h3>Items</h3>
+
             {selected.items?.length ? (
               selected.items.map((item, i) => (
                 <div key={i} style={styles.row}>
@@ -169,13 +136,12 @@ export default function InvoicesPage() {
             </h1>
 
             <button onClick={() => window.print()} style={styles.print}>
-              🖨 Print
+              🖨 Print Invoice
             </button>
 
             <button onClick={() => setSelected(null)} style={styles.close}>
               Close
             </button>
-
           </div>
         </div>
       )}
