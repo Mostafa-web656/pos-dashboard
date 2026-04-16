@@ -1,32 +1,57 @@
 import API from "./axios";
 
-// منتجات
+// 📦 Products
 export const fetchProducts = async () => {
-  const res = await API.get("products/");
-  return res.data;
+  try {
+    const res = await API.get("products/");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
 };
 
 export const createProduct = async (data) => {
-  const res = await API.post("products/", data);
-  return res.data;
+  try {
+    const res = await API.post("products/", data);
+    return res.data;
+  } catch (error) {
+    console.error("Error creating product:", error);
+    throw error;
+  }
 };
 
-// بيع
+// 💰 Sales
 export const createSale = async (data) => {
-  const res = await API.post("sales/create/", data);
-  return res.data;
+  try {
+    const res = await API.post("sales/create/", data);
+    return res.data;
+  } catch (error) {
+    console.error("Error creating sale:", error);
+    throw error;
+  }
 };
 
-// تقارير
+// 📊 Reports
 export const getDailyReport = async () => {
-  const res = await API.get("sales/reports/daily/");
-  return res.data;
+  try {
+    const res = await API.get("sales/reports/daily/");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching daily report:", error);
+    throw error;
+  }
 };
 
 export const getMonthlyReport = async () => {
-  const res = await API.get("sales/reports/monthly/");
-  return res.data;
+  try {
+    const res = await API.get("sales/reports/monthly/");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching monthly report:", error);
+    throw error;
+  }
 };
 
-
+// 🔗 Export instance
 export default API;

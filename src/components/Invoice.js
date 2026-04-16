@@ -24,6 +24,8 @@ export default function InvoicesPage() {
     }
   };
 
+  // ✅ fix eslint بدون تغيير behavior
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchInvoices();
   }, []);
@@ -87,10 +89,7 @@ export default function InvoicesPage() {
 
       {/* 🧾 Invoice Modal */}
       {selected && (
-        <div
-          style={styles.modalBg}
-          onClick={() => setSelected(null)}
-        >
+        <div style={styles.modalBg} onClick={() => setSelected(null)}>
           <div
             style={styles.invoice}
             onClick={(e) => e.stopPropagation()}
@@ -159,7 +158,7 @@ export default function InvoicesPage() {
               Total: {Number(selected.total).toFixed(2)} EGP
             </h1>
 
-            {/* 🖨 Print Button */}
+            {/* 🖨 Print */}
             <button
               onClick={() => window.print()}
               style={styles.print}
@@ -167,7 +166,7 @@ export default function InvoicesPage() {
               🖨 Print Invoice
             </button>
 
-            {/* ❌ Close Button */}
+            {/* ❌ Close */}
             <button
               onClick={() => setSelected(null)}
               style={styles.close}
@@ -181,7 +180,7 @@ export default function InvoicesPage() {
   );
 }
 
-// 🎨 Styles
+// 🎨 Styles (زي ما هي)
 const styles = {
   container: {
     padding: "30px",
