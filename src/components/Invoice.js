@@ -24,11 +24,9 @@ export default function InvoicesPage() {
     }
   }, [filters]);
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
-
-  
+ useEffect(() => {
+  fetchInvoices();
+}, []);
 
   // ✏️ handle input change
   const handleChange = (e) => {
