@@ -64,7 +64,9 @@ export default function InvoicesPage() {
             <p>{selected.customer_name}</p>
             <p>{selected.total}</p>
 
-            <button onClick={() => setSelected(null)}>Close</button>
+            <button onClick={() => setSelected(null)}>
+              Close
+            </button>
           </div>
         </div>
       )}
