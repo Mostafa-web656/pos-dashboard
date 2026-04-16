@@ -1,3 +1,4 @@
+import React from "react";
 import API from "./axios";
 
 // 📦 Products
@@ -53,5 +54,4 @@ export const getMonthlyReport = async () => {
   }
 };
 
-// 🔗 Export instance
 export default API;

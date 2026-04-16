@@ -1,34 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import api from "../api/api";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-  const [day, setDay] = useState("");
+  const [filters, setFilters] = useState({
+    day: "",
+    month: "",
+    year: "",
+  });
   const [selected, setSelected] = useState(null);
 
-  // 🔄 Fetch invoices from backend
-  const fetchInvoices = async () => {
+  // 📦 Fetch invoices
+  const fetchInvoices = useCallback(async () => {
     try {
       let url = "sales/invoices/?";
-      if (month) url += `month=${month}&`;
-      if (year) url += `year=${year}&`;
-      if (day) url += `day=${day}`;
+
+      if (filters.day) url += `day=${filters.day}&`;
+      if (filters.month) url += `month=${filters.month}&`;
+      if (filters.year) url += `year=${filters.year}`;
 
       const res = await api.get(url);
-      setInvoices(res.data);
+      setInvoices(res.data || []);
     } catch (error) {
       console.error("Error fetching invoices:", error);
       alert("Failed to load invoices ❌");
     }
-  };
+  }, [filters.day, filters.month, filters.year]);
 
-  // ✅ fix eslint بدون تغيير behavior
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // 🔄 load on mount + filters change
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
+
+  // ✏️ handle input change
+  const handleChange = (e) => {
+    setFilters({
+      ...filters,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
     <div style={styles.container}>
@@ -37,32 +47,38 @@ export default function InvoicesPage() {
       {/* 🔍 Filters */}
       <div style={styles.filter}>
         <input
+          name="day"
           type="number"
           placeholder="Day"
-          value={day}
-          onChange={(e) => setDay(e.target.value)}
+          value={filters.day}
+          onChange={handleChange}
           style={styles.input}
         />
+
         <input
+          name="month"
           type="number"
           placeholder="Month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
+          value={filters.month}
+          onChange={handleChange}
           style={styles.input}
         />
+
         <input
+          name="year"
           type="number"
           placeholder="Year"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
+          value={filters.year}
+          onChange={handleChange}
           style={styles.input}
         />
+
         <button onClick={fetchInvoices} style={styles.searchBtn}>
           Search
         </button>
       </div>
 
-      {/* 📋 Invoice Cards */}
+      {/* 📋 List */}
       <div style={styles.grid}>
         {invoices.length > 0 ? (
           invoices.map((inv) => (
@@ -72,13 +88,17 @@ export default function InvoicesPage() {
               onClick={() => setSelected(inv)}
             >
               <h3>Invoice #{inv.id}</h3>
-              <p>{new Date(inv.created_at).toLocaleString()}</p>
+              <p>
+                {inv.created_at
+                  ? new Date(inv.created_at).toLocaleString()
+                  : ""}
+              </p>
               <p>
                 <strong>Customer:</strong>{" "}
                 {inv.customer_name || "Walk-in Customer"}
               </p>
               <h2 style={{ color: "#10b981" }}>
-                {Number(inv.total).toFixed(2)} EGP
+                {Number(inv.total || 0).toFixed(2)} EGP
               </h2>
             </div>
           ))
@@ -87,7 +107,7 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      {/* 🧾 Invoice Modal */}
+      {/* 🧾 Modal */}
       {selected && (
         <div style={styles.modalBg} onClick={() => setSelected(null)}>
           <div
@@ -95,14 +115,18 @@ export default function InvoicesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 style={{ textAlign: "center" }}>POS STORE</h2>
+
             <p style={{ textAlign: "center" }}>
               Invoice #{selected.id}
             </p>
+
             <p style={{ textAlign: "center" }}>
-              {new Date(selected.created_at).toLocaleString()}
+              {selected.created_at
+                ? new Date(selected.created_at).toLocaleString()
+                : ""}
             </p>
 
-            {/* 👤 Customer Info */}
+            {/* 👤 Customer */}
             <div style={styles.customerBox}>
               <p>
                 <strong>Customer:</strong>{" "}
@@ -118,14 +142,14 @@ export default function InvoicesPage() {
 
             {/* 🛒 Items */}
             <h3>Items</h3>
-            {selected.items && selected.items.length > 0 ? (
-              selected.items.map((item, index) => (
-                <div key={index} style={styles.row}>
+            {selected.items?.length ? (
+              selected.items.map((item, i) => (
+                <div key={i} style={styles.row}>
                   <span>
                     {item.name} × {item.qty}
                   </span>
                   <b>
-                    {Number(item.total).toFixed(2)} EGP
+                    {Number(item.total || 0).toFixed(2)} EGP
                   </b>
                 </div>
               ))
@@ -155,7 +179,7 @@ export default function InvoicesPage() {
             <hr />
 
             <h1 style={styles.total}>
-              Total: {Number(selected.total).toFixed(2)} EGP
+              Total: {Number(selected.total || 0).toFixed(2)} EGP
             </h1>
 
             {/* 🖨 Print */}
@@ -180,7 +204,7 @@ export default function InvoicesPage() {
   );
 }
 
-// 🎨 Styles (زي ما هي)
+// 🎨 Styles
 const styles = {
   container: {
     padding: "30px",
@@ -226,8 +250,6 @@ const styles = {
     borderRadius: "15px",
     cursor: "pointer",
     textAlign: "center",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-    transition: "transform 0.2s",
   },
   modalBg: {
     position: "fixed",
@@ -247,7 +269,6 @@ const styles = {
     padding: "30px",
     width: "400px",
     borderRadius: "15px",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
   },
   customerBox: {
     background: "#f3f4f6",
@@ -272,8 +293,6 @@ const styles = {
     color: "white",
     border: "none",
     borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "bold",
   },
   close: {
     width: "100%",
@@ -283,7 +302,5 @@ const styles = {
     color: "white",
     border: "none",
     borderRadius: "10px",
-    cursor: "pointer",
-    fontWeight: "bold",
   },
 };
