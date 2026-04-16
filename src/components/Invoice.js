@@ -8,9 +8,7 @@ export default function InvoicesPage() {
     month: "",
     year: "",
   });
-  const [selected, setSelected] = useState(null);
 
-  // 📦 Fetch invoices
   const fetchInvoices = useCallback(async () => {
     try {
       let url = "sales/invoices/?";
@@ -22,15 +20,15 @@ export default function InvoicesPage() {
       const res = await api.get(url);
       setInvoices(res.data || []);
     } catch (error) {
-      console.error("Error fetching invoices:", error);
-      alert("Failed to load invoices ❌");
+      console.error(error);
     }
-  }, [filters.day, filters.month, filters.year]);
+  }, [filters]);
 
-  // 🔄 load on mount + filters change
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
+
+  
 
   // ✏️ handle input change
   const handleChange = (e) => {

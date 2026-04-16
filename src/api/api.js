@@ -1,5 +1,4 @@
 import React from "react";
-import API from "./axios";
 
 // 📦 Products
 export const fetchProducts = async () => {
