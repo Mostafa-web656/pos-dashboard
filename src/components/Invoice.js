@@ -4,7 +4,7 @@ import api from "../api/api";
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
 
-  // ✅ FIX 1: لازم يتعرفوا
+  // ✅ FIX: لازم يتعرفوا
   const [selected, setSelected] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -28,7 +28,7 @@ export default function InvoicesPage() {
     }
   }, [filters]);
 
-  // ✅ FIX 2: يتحدث مع الفلاتر
+  // ✅ FIX: يتحدث مع الفلاتر
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
@@ -107,9 +107,7 @@ export default function InvoicesPage() {
             {selected.items?.length ? (
               selected.items.map((item, i) => (
                 <div key={i} style={styles.row}>
-                  <span>
-                    {item.name} × {item.qty}
-                  </span>
+                  <span>{item.name} × {item.qty}</span>
                   <b>{Number(item.total || 0).toFixed(2)} EGP</b>
                 </div>
               ))
@@ -148,3 +146,105 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+
+
+const styles = {
+  container: {
+    padding: "30px",
+    background: "#f9fafb",
+    minHeight: "100vh",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: "20px",
+    color: "#111827",
+  },
+  filter: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "25px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  input: {
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    width: "120px",
+  },
+  searchBtn: {
+    padding: "10px 20px",
+    background: "#111827",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "20px",
+  },
+  card: {
+    background: "#111827",
+    color: "white",
+    padding: "20px",
+    borderRadius: "15px",
+    cursor: "pointer",
+    textAlign: "center",
+  },
+  modalBg: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0,0,0,0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  invoice: {
+    background: "white",
+    color: "black",
+    padding: "30px",
+    width: "400px",
+    borderRadius: "15px",
+  },
+  customerBox: {
+    background: "#f3f4f6",
+    padding: "10px",
+    borderRadius: "8px",
+    marginBottom: "10px",
+  },
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "8px",
+  },
+  total: {
+    textAlign: "center",
+    color: "#111827",
+  },
+  print: {
+    width: "100%",
+    padding: "12px",
+    marginTop: "15px",
+    background: "#10b981",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+  },
+  close: {
+    width: "100%",
+    padding: "12px",
+    marginTop: "10px",
+    background: "#ef4444",
+    color: "white",
+    border: "none",
+    borderRadius: "10px",
+  },
+};
