@@ -11,7 +11,7 @@ export default function Invoice() {
   const fetchInvoices = async () => {
     try {
       const res = await api.get("sales/invoices/");
-      setInvoices(res.data);
+      setInvoices(res.data || []);
     } catch (err) {
       console.log(err);
       alert("❌ Failed to load invoices");
@@ -22,7 +22,7 @@ export default function Invoice() {
     fetchInvoices();
   }, []);
 
-  // 🔍 فلترة
+  // 🔍 فلترة الفواتير
   const filtered = invoices.filter((inv) =>
     inv.id.toString().includes(search) ||
     (inv.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -46,7 +46,7 @@ export default function Invoice() {
         style={styles.search}
       />
 
-      {/* 📋 List */}
+      {/* 📋 Invoices List */}
       <div style={styles.grid}>
         {filtered.map((inv) => (
           <div
@@ -69,6 +69,7 @@ export default function Invoice() {
 
             <div ref={printRef}>
               <h2 style={{ textAlign: "center" }}>POS STORE</h2>
+
               <p style={{ textAlign: "center" }}>
                 Invoice #{selected.id}
               </p>
@@ -79,28 +80,31 @@ export default function Invoice() {
 
               <hr />
 
-              {/* ✅ FIX HERE (important) */}
+              {/* 🧾 Items SAFE */}
               {(selected?.items || []).map((item, i) => (
                 <div key={i} style={styles.row}>
-                  <span>{item.name} × {item.qty}</span>
+                  <span>
+                    {item.name} × {item.qty}
+                  </span>
                   <b>{item.total} EGP</b>
                 </div>
               ))}
 
               <hr />
 
+              {/* 💰 Totals SAFE */}
               <div style={styles.row}>
                 <span>Subtotal</span>
-                <b>{selected.total} EGP</b>
+                <b>{Number(selected.total || 0)} EGP</b>
               </div>
 
               <div style={styles.row}>
                 <span>Tax (14%)</span>
-                <b>{(selected.total * 0.14).toFixed(2)} EGP</b>
+                <b>{(Number(selected.total || 0) * 0.14).toFixed(2)} EGP</b>
               </div>
 
               <h2 style={{ textAlign: "center" }}>
-                Total: {(selected.total * 1.14).toFixed(2)} EGP
+                Total: {(Number(selected.total || 0) * 1.14).toFixed(2)} EGP
               </h2>
             </div>
 
@@ -120,34 +124,35 @@ export default function Invoice() {
   );
 }
 
+// 🎨 Styles
 const styles = {
   container: {
     padding: 30,
     background: "#0f172a",
     minHeight: "100vh",
-    color: "white"
+    color: "white",
   },
   title: {
     textAlign: "center",
-    marginBottom: 20
+    marginBottom: 20,
   },
   search: {
     width: "100%",
     padding: 12,
     marginBottom: 20,
     borderRadius: 10,
-    border: "none"
+    border: "none",
   },
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))",
-    gap: 15
+    gap: 15,
   },
   card: {
     background: "#1f2937",
     padding: 20,
     borderRadius: 15,
-    cursor: "pointer"
+    cursor: "pointer",
   },
   overlay: {
     position: "fixed",
@@ -158,19 +163,19 @@ const styles = {
     background: "rgba(0,0,0,0.7)",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   modal: {
     background: "white",
     color: "black",
     padding: 25,
     width: 400,
-    borderRadius: 15
+    borderRadius: 15,
   },
   row: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: 8
+    marginBottom: 8,
   },
   print: {
     width: "100%",
@@ -179,7 +184,7 @@ const styles = {
     background: "#22c55e",
     border: "none",
     borderRadius: 10,
-    color: "white"
+    color: "white",
   },
   close: {
     width: "100%",
@@ -188,6 +193,6 @@ const styles = {
     background: "red",
     border: "none",
     borderRadius: 10,
-    color: "white"
-  }
+    color: "white",
+  },
 };
