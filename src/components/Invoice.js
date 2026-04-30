@@ -79,7 +79,8 @@ export default function Invoice() {
 
               <hr />
 
-              {selected.items.map((item, i) => (
+              {/* ✅ FIX HERE (important) */}
+              {(selected?.items || []).map((item, i) => (
                 <div key={i} style={styles.row}>
                   <span>{item.name} × {item.qty}</span>
                   <b>{item.total} EGP</b>

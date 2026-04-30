@@ -15,12 +15,14 @@ export default function MonthlyReport() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
 
-  // ✅ حل مشكلة الـ warning
   const fetchData = useCallback(async () => {
     try {
       const res = await api.get(
         `sales/reports/monthly/?month=${month}&year=${year}`
       );
+
+      console.log("API RESPONSE:", res.data); // 👈 مهم
+
       setData(res.data);
     } catch (err) {
       console.log(err);
@@ -31,6 +33,9 @@ export default function MonthlyReport() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // 👈 تشخيص
+  console.log("DATA:", data);
 
   if (!data) return <h2 style={{ padding: 40 }}>Loading...</h2>;
 
@@ -60,17 +65,17 @@ export default function MonthlyReport() {
       <div style={styles.cards}>
         <div style={styles.card}>
           <h3>💰 Total</h3>
-          <h1>{data.total} EGP</h1>
+          <h1>{data.total || 0} EGP</h1>
         </div>
 
         <div style={styles.card}>
           <h3>🧾 Orders</h3>
-          <h1>{data.count}</h1>
+          <h1>{data.count || 0}</h1>
         </div>
 
         <div style={styles.card}>
           <h3>📈 Average</h3>
-          <h1>{data.average}</h1>
+          <h1>{data.average || 0}</h1>
         </div>
 
         <div style={styles.card}>
@@ -82,14 +87,26 @@ export default function MonthlyReport() {
       {/* رسم */}
       <div style={styles.chart}>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data.chart || []}>
+          <LineChart data={data.chart && data.chart.length ? data.chart : []}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="day" />
             <YAxis />
             <Tooltip />
-            <Line dataKey="total" stroke="#22c55e" strokeWidth={3} />
+            <Line
+              dataKey="total"
+              stroke="#22c55e"
+              strokeWidth={3}
+              dot={{ r: 3 }}
+            />
           </LineChart>
         </ResponsiveContainer>
+
+        {/* لو مفيش بيانات */}
+        {(!data.chart || data.chart.length === 0) && (
+          <p style={{ textAlign: "center", marginTop: 20 }}>
+            ⚠️ No data available for this month
+          </p>
+        )}
       </div>
     </div>
   );
