@@ -1,0 +1,74 @@
+/* الخلفية */
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* الكارت */
+.login-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  padding: 40px;
+  border-radius: 20px;
+  width: 320px;
+  text-align: center;
+  color: white;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* العنوان */
+.login-card h2 {
+  margin-bottom: 5px;
+}
+
+/* النص الصغير */
+.subtitle {
+  font-size: 14px;
+  margin-bottom: 25px;
+  opacity: 0.8;
+}
+
+/* الانبوت */
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+
+  border: none;
+  border-radius: 10px;
+  outline: none;
+
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+/* placeholder */
+.login-card input::placeholder {
+  color: #ddd;
+}
+
+/* الزرار */
+.login-card button {
+  width: 100%;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #333;
+
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* hover */
+.login-card button:hover {
+  background: #ddd;
+}
