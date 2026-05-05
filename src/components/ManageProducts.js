@@ -7,12 +7,15 @@ export default function ManageProducts() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [unitType, setUnitType] = useState("piece");
+  const [lowStock, setLowStock] = useState(5);
+
   const [search, setSearch] = useState("");
 
-  // 🔄 جلب المنتجات (clean + stable)
   const fetchProducts = useCallback(async () => {
     try {
       const res = await api.get(`products/?search=${search}`);
@@ -23,57 +26,60 @@ export default function ManageProducts() {
   }, [search]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      fetchProducts();
-    }, 300);
-
-    return () => clearTimeout(timeout);
+    const t = setTimeout(() => fetchProducts(), 300);
+    return () => clearTimeout(t);
   }, [search, fetchProducts]);
 
-  // ➕ إضافة منتج
+  // ➕ ADD PRODUCT
   const addProduct = async () => {
     try {
-      await api.post("products/", { name, price, stock });
+      await api.post("products/", {
+        name,
+        price,
+        stock,
+        unit_type: unitType,
+        low_stock_alert: lowStock,
+      });
+
       setShowAddModal(false);
-      setName("");
-      setPrice("");
-      setStock("");
+      resetForm();
       fetchProducts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ✏️ فتح تعديل
+  // ✏️ OPEN EDIT
   const openEditModal = (product) => {
     setEditProduct(product);
     setName(product.name);
     setPrice(product.price);
     setStock(product.stock);
+    setUnitType(product.unit_type || "piece");
+    setLowStock(product.low_stock_alert || 5);
     setShowEditModal(true);
   };
 
-  // 💾 حفظ تعديل
+  // 💾 SAVE EDIT
   const saveEdit = async () => {
     try {
       await api.put(`products/${editProduct.id}/`, {
         name,
         price,
         stock,
+        unit_type: unitType,
+        low_stock_alert: lowStock,
       });
 
       setShowEditModal(false);
       setEditProduct(null);
-      setName("");
-      setPrice("");
-      setStock("");
+      resetForm();
       fetchProducts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🗑 حذف منتج
   const deleteProduct = async (id) => {
     try {
       await api.delete(`products/${id}/`);
@@ -83,10 +89,20 @@ export default function ManageProducts() {
     }
   };
 
+  const resetForm = () => {
+    setName("");
+    setPrice("");
+    setStock("");
+    setUnitType("piece");
+    setLowStock(5);
+  };
+
   return (
     <div className="container">
+
       <div className="header">
         <h2>إدارة المنتجات</h2>
+
         <button className="add-btn" onClick={() => setShowAddModal(true)}>
           ➕ إضافة منتج
         </button>
@@ -99,110 +115,113 @@ export default function ManageProducts() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
+      {/* TABLE */}
       <table>
         <thead>
           <tr>
             <th>الاسم</th>
             <th>السعر</th>
             <th>المخزون</th>
+            <th>الحالة</th>
             <th>إجراء</th>
           </tr>
         </thead>
 
         <tbody>
-          {products.map((p) => (
-            <tr key={p.id}>
-              <td>{p.name}</td>
-              <td>{p.price} ج</td>
-              <td>{p.stock}</td>
-              <td className="options-cell">
-                <div className="dropdown">
-                  <button className="dropbtn">⋮</button>
-                  <div className="dropdown-content">
-                    <button onClick={() => openEditModal(p)}>تعديل</button>
-                    <button onClick={() => deleteProduct(p.id)}>حذف</button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {products.map((p) => {
+            const low = p.stock <= p.low_stock_alert;
+            const out = p.stock <= 0;
+
+            return (
+              <tr key={p.id}>
+                <td>{p.name}</td>
+                <td>{p.price} ج</td>
+
+                <td>
+                  {p.stock} {p.unit_type}
+                </td>
+
+                <td>
+                  {out && <span style={{ color: "red" }}>Out</span>}
+                  {!out && low && (
+                    <span style={{ color: "orange" }}>Low</span>
+                  )}
+                  {!out && !low && (
+                    <span style={{ color: "green" }}>OK</span>
+                  )}
+                </td>
+
+                <td>
+                  <button onClick={() => openEditModal(p)}>تعديل</button>
+                  <button onClick={() => deleteProduct(p.id)}>حذف</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
-      {/* ➕ Add Modal */}
+      {/* ➕ ADD MODAL */}
       {showAddModal && (
         <div className="modal">
           <div className="modal-content">
+
             <h3>إضافة منتج</h3>
 
-            <input
-              placeholder="اسم المنتج"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم المنتج" />
+            <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="السعر" />
+            <input value={stock} onChange={(e) => setStock(e.target.value)} placeholder="المخزون" />
+
+            {/* 🔥 UNIT TYPE */}
+            <select value={unitType} onChange={(e) => setUnitType(e.target.value)}>
+              <option value="piece">قطعة</option>
+              <option value="gram">جرام</option>
+              <option value="liter">لتر</option>
+            </select>
 
             <input
-              placeholder="السعر"
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-
-            <input
-              placeholder="المخزون"
-              type="number"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
+              value={lowStock}
+              onChange={(e) => setLowStock(e.target.value)}
+              placeholder="حد التنبيه"
             />
 
             <div className="modal-actions">
               <button onClick={addProduct}>حفظ</button>
-              <button className="cancel" onClick={() => setShowAddModal(false)}>
-                إلغاء
-              </button>
+              <button onClick={() => setShowAddModal(false)}>إلغاء</button>
             </div>
+
           </div>
         </div>
       )}
 
-      {/* ✏️ Edit Modal */}
+      {/* ✏️ EDIT MODAL */}
       {showEditModal && (
         <div className="modal">
           <div className="modal-content">
+
             <h3>تعديل المنتج</h3>
 
-            <input
-              placeholder="اسم المنتج"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <input value={name} onChange={(e) => setName(e.target.value)} />
+            <input value={price} onChange={(e) => setPrice(e.target.value)} />
+            <input value={stock} onChange={(e) => setStock(e.target.value)} />
 
-            <input
-              placeholder="السعر"
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
+            <select value={unitType} onChange={(e) => setUnitType(e.target.value)}>
+              <option value="piece">قطعة</option>
+              <option value="gram">جرام</option>
+              <option value="liter">لتر</option>
+            </select>
 
-            <input
-              placeholder="المخزون"
-              type="number"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-            />
+            <input value={lowStock} onChange={(e) => setLowStock(e.target.value)} />
 
             <div className="modal-actions">
               <button onClick={saveEdit}>حفظ</button>
-              <button
-                className="cancel"
-                onClick={() => setShowEditModal(false)}
-              >
-                إلغاء
-              </button>
+              <button onClick={() => setShowEditModal(false)}>إلغاء</button>
             </div>
+
           </div>
         </div>
       )}
+
     </div>
   );
 }

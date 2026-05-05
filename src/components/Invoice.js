@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
 export default function Invoice() {
   const [invoices, setInvoices] = useState([]);
-  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
-  const printRef = useRef();
 
   // 🔄 تحميل الفواتير
   const fetchInvoices = async () => {
@@ -14,7 +12,6 @@ export default function Invoice() {
       setInvoices(res.data || []);
     } catch (err) {
       console.log(err);
-      alert("❌ Failed to load invoices");
     }
   };
 
@@ -22,102 +19,57 @@ export default function Invoice() {
     fetchInvoices();
   }, []);
 
-  // 🔍 فلترة الفواتير
-  const filtered = invoices.filter((inv) =>
-    inv.id.toString().includes(search) ||
-    (inv.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
-    (inv.customer_phone || "").includes(search)
-  );
-
-  // 🖨 طباعة
-  const handlePrint = () => {
-    window.print();
+  // 🔥 تحميل تفاصيل الفاتورة
+  const openInvoice = async (id) => {
+    try {
+      const res = await api.get(`sales/invoices/${id}/`);
+      setSelected(res.data);
+    } catch (err) {
+      console.log(err);
+      alert("❌ Error loading invoice");
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>🧾 Invoices</h1>
+    <div style={{ padding: 30 }}>
+      <h1>Invoices</h1>
 
-      {/* 🔍 Search */}
-      <input
-        placeholder="Search by ID / Name / Phone"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={styles.search}
-      />
+      {invoices.map((inv) => (
+        <div
+          key={inv.id}
+          onClick={() => openInvoice(inv.id)}
+          style={{
+            background: "#eee",
+            padding: 15,
+            marginBottom: 10,
+            cursor: "pointer",
+          }}
+        >
+          <h3>Invoice #{inv.id}</h3>
+          <p>{inv.customer_name || "Walk-in"}</p>
+          <h4>{inv.total} EGP</h4>
+        </div>
+      ))}
 
-      {/* 📋 Invoices List */}
-      <div style={styles.grid}>
-        {filtered.map((inv) => (
-          <div
-            key={inv.id}
-            style={styles.card}
-            onClick={() => setSelected(inv)}
-          >
-            <h3>Invoice #{inv.id}</h3>
-            <p>{inv.date}</p>
-            <p>{inv.customer_name || "Walk-in"}</p>
-            <h2>{inv.total} EGP</h2>
-          </div>
-        ))}
-      </div>
-
-      {/* 🧾 Modal */}
+      {/* 🧾 تفاصيل الفاتورة */}
       {selected && (
-        <div style={styles.overlay} onClick={() => setSelected(null)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div style={{ background: "#fff", padding: 20, marginTop: 20 }}>
+          <h2>Invoice #{selected.id}</h2>
 
-            <div ref={printRef}>
-              <h2 style={{ textAlign: "center" }}>POS STORE</h2>
+          <p>{selected.customer_name || "Walk-in"}</p>
 
-              <p style={{ textAlign: "center" }}>
-                Invoice #{selected.id}
-              </p>
+          <hr />
 
-              <p><b>Date:</b> {selected.date}</p>
-              <p><b>Customer:</b> {selected.customer_name || "Walk-in"}</p>
-              <p><b>Phone:</b> {selected.customer_phone || "-"}</p>
-
-              <hr />
-
-              {/* 🧾 Items SAFE */}
-              {(selected?.items || []).map((item, i) => (
-                <div key={i} style={styles.row}>
-                  <span>
-                    {item.name} × {item.qty}
-                  </span>
-                  <b>{item.total} EGP</b>
-                </div>
-              ))}
-
-              <hr />
-
-              {/* 💰 Totals SAFE */}
-              <div style={styles.row}>
-                <span>Subtotal</span>
-                <b>{Number(selected.total || 0)} EGP</b>
-              </div>
-
-              <div style={styles.row}>
-                <span>Tax (14%)</span>
-                <b>{(Number(selected.total || 0) * 0.14).toFixed(2)} EGP</b>
-              </div>
-
-              <h2 style={{ textAlign: "center" }}>
-                Total: {(Number(selected.total || 0) * 1.14).toFixed(2)} EGP
-              </h2>
+          {selected.items.map((item, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>{item.name} × {item.qty}</span>
+              <span>{item.total} EGP</span>
             </div>
+          ))}
 
-            {/* 🔘 Buttons */}
-            <button style={styles.print} onClick={handlePrint}>
-              🖨 Print
-            </button>
+          <hr />
 
-            <button style={styles.close} onClick={() => setSelected(null)}>
-              Close
-            </button>
-
-          </div>
+          <h2>Total: {selected.total} EGP</h2>
         </div>
       )}
     </div>

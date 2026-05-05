@@ -140,3 +140,31 @@ border:none;
   border: 1px solid #ccc;
   width: 200px;
 }
+.product {
+  padding: 15px;
+  border-radius: 10px;
+  background: #111827;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.product:hover {
+  transform: scale(1.03);
+}
+
+.out {
+  opacity: 0.4;
+  border: 1px solid red;
+  cursor: not-allowed;
+}
+
+.low {
+  border: 1px solid orange;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
