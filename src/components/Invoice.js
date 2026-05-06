@@ -8,7 +8,7 @@ export default function Invoice() {
   // 🔄 تحميل الفواتير
   const fetchInvoices = async () => {
     try {
-      const res = await api.get("sales/invoices/");
+      const res = await api.get(`sales/invoices/${id}/`);
       setInvoices(res.data || []);
     } catch (err) {
       console.log(err);
