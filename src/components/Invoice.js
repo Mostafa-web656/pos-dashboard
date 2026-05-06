@@ -12,6 +12,7 @@ export default function Invoice() {
       setInvoices(res.data || []);
     } catch (err) {
       console.log(err);
+      alert("❌ Failed to load invoices");
     }
   };
 
@@ -19,10 +20,10 @@ export default function Invoice() {
     fetchInvoices();
   }, []);
 
-  // 🔥 تحميل تفاصيل الفاتورة
+  // 🔥 تحميل تفاصيل الفاتورة (FIXED)
   const openInvoice = async (id) => {
     try {
-      const res = await api.get(`sales/invoices/${id}/`);
+      const res = await api.get(`sales/invoice/${id}/`); // ✅ هنا التصحيح
       setSelected(res.data);
     } catch (err) {
       console.log(err);
@@ -32,8 +33,9 @@ export default function Invoice() {
 
   return (
     <div style={{ padding: 30 }}>
-      <h1>Invoices</h1>
+      <h1>🧾 Invoices</h1>
 
+      {/* 📋 قائمة الفواتير */}
       {invoices.map((inv) => (
         <div
           key={inv.id}
@@ -43,6 +45,7 @@ export default function Invoice() {
             padding: 15,
             marginBottom: 10,
             cursor: "pointer",
+            borderRadius: 10,
           }}
         >
           <h3>Invoice #{inv.id}</h3>
@@ -53,15 +56,30 @@ export default function Invoice() {
 
       {/* 🧾 تفاصيل الفاتورة */}
       {selected && (
-        <div style={{ background: "#fff", padding: 20, marginTop: 20 }}>
+        <div
+          style={{
+            background: "#fff",
+            padding: 20,
+            marginTop: 20,
+            borderRadius: 10,
+          }}
+        >
           <h2>Invoice #{selected.id}</h2>
 
-          <p>{selected.customer_name || "Walk-in"}</p>
+          <p><b>Customer:</b> {selected.customer_name || "Walk-in"}</p>
 
           <hr />
 
-          {selected.items.map((item, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+          {/* 🔥 عرض الأصناف */}
+          {(selected.items || []).map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
               <span>{item.name} × {item.qty}</span>
               <span>{item.total} EGP</span>
             </div>
