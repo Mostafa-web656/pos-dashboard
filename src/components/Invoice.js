@@ -1,95 +1,104 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
-export default function Invoice() {
+export default function InvoicePage() {
   const [invoices, setInvoices] = useState([]);
-  const [selected, setSelected] = useState(null);
-
-  // 🔄 تحميل الفواتير
-  const fetchInvoices = async () => {
-    try {
-      const res = await api.get(`sales/invoices/${id}/`);
-      setInvoices(res.data || []);
-    } catch (err) {
-      console.log(err);
-      alert("❌ Failed to load invoices");
-    }
-  };
+  const [invoice, setInvoice] = useState(null);
 
   useEffect(() => {
-    fetchInvoices();
+    api.get("sales/invoices/")
+      .then(res => setInvoices(res.data))
+      .catch(err => console.log(err));
   }, []);
 
-  // 🔥 تحميل تفاصيل الفاتورة (FIXED)
-  const openInvoice = async (id) => {
-    try {
-      const res = await api.get(`sales/invoice/${id}/`); // ✅ هنا التصحيح
-      setSelected(res.data);
-    } catch (err) {
-      console.log(err);
-      alert("❌ Error loading invoice");
-    }
+  const openInvoice = (id) => {
+    api.get(`sales/invoices/${id}/`)
+      .then(res => setInvoice(res.data))
+      .catch(err => console.log(err));
   };
 
   return (
-    <div style={{ padding: 30 }}>
-      <h1>🧾 Invoices</h1>
+    <div style={{ display: "flex", gap: 20, padding: 20 }}>
 
-      {/* 📋 قائمة الفواتير */}
-      {invoices.map((inv) => (
-        <div
-          key={inv.id}
-          onClick={() => openInvoice(inv.id)}
-          style={{
-            background: "#eee",
-            padding: 15,
-            marginBottom: 10,
-            cursor: "pointer",
-            borderRadius: 10,
-          }}
-        >
-          <h3>Invoice #{inv.id}</h3>
-          <p>{inv.customer_name || "Walk-in"}</p>
-          <h4>{inv.total} EGP</h4>
-        </div>
-      ))}
+      {/* LEFT: LIST */}
+      <div style={{ width: "40%" }}>
+        <h2>🧾 Invoices</h2>
 
-      {/* 🧾 تفاصيل الفاتورة */}
-      {selected && (
-        <div
-          style={{
-            background: "#fff",
-            padding: 20,
-            marginTop: 20,
-            borderRadius: 10,
-          }}
-        >
-          <h2>Invoice #{selected.id}</h2>
+        {invoices.map(inv => (
+          <div
+            key={inv.id}
+            onClick={() => openInvoice(inv.id)}
+            style={{
+              padding: 10,
+              marginBottom: 10,
+              background: "#f1f1f1",
+              cursor: "pointer",
+              borderRadius: 8
+            }}
+          >
+            <b>Invoice #{inv.id}</b>
+            <div>{inv.customer_name || "Walk-in"}</div>
+            <div>{inv.total} EGP</div>
+          </div>
+        ))}
+      </div>
 
-          <p><b>Customer:</b> {selected.customer_name || "Walk-in"}</p>
+      {/* RIGHT: INVOICE UI */}
+      <div style={{
+        width: "60%",
+        background: "#fff",
+        padding: 20,
+        borderRadius: 10,
+        border: "1px solid #ddd"
+      }}>
 
-          <hr />
+        {!invoice ? (
+          <h3>👈 اختر فاتورة</h3>
+        ) : (
+          <>
+            <h2 style={{ textAlign: "center" }}>🧾 POS SYSTEM</h2>
 
-          {/* 🔥 عرض الأصناف */}
-          {(selected.items || []).map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 8,
-              }}
-            >
-              <span>{item.name} × {item.qty}</span>
-              <span>{item.total} EGP</span>
+            <p style={{ textAlign: "center", color: "gray" }}>
+              {invoice.date}
+            </p>
+
+            <hr />
+
+            <p>
+              <b>Customer:</b> {invoice.customer_name || "Walk-in"}
+            </p>
+
+            <hr />
+
+            {/* ITEMS */}
+            {invoice.items.map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "5px 0"
+                }}
+              >
+                <span>
+                  {item.name} × {item.qty}
+                </span>
+
+                <span>{item.total} EGP</span>
+              </div>
+            ))}
+
+            <hr />
+
+            <div style={{ textAlign: "right" }}>
+              <p>Subtotal: {invoice.total}</p>
+              <p>VAT: 0.00</p>
+
+              <h2>Total: {invoice.total} EGP</h2>
             </div>
-          ))}
-
-          <hr />
-
-          <h2>Total: {selected.total} EGP</h2>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
