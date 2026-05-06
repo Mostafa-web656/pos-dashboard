@@ -36,10 +36,8 @@ export default function Cashier() {
     }
   };
 
-  // 🛒 ADD TO CART (with stock protection)
+  // ✅ FIXED: إضافة المنتج بشكل صحيح
   const addToCart = (product) => {
-    if (product.stock_status === "OUT") return;
-
     const exist = cart.find((i) => i.id === product.id);
 
     if (exist) {
@@ -56,7 +54,6 @@ export default function Cashier() {
           name: product.name,
           price: Number(product.price),
           qty: 1,
-          unit: product.unit_type,
         },
       ]);
     }
@@ -82,7 +79,7 @@ export default function Cashier() {
   const tax = taxEnabled ? (subtotal * taxRate) / 100 : 0;
   const total = subtotal + tax;
 
-  // 🧾 PRINT INVOICE
+  // 🧾 Print Invoice
   const printInvoice = () => {
     const date = new Date().toLocaleString();
     const win = window.open("", "PRINT", "width=400,height=600");
@@ -112,7 +109,7 @@ export default function Cashier() {
             ${cart.map(i => `
               <tr>
                 <td>${i.name}</td>
-                <td>${i.qty} ${i.unit}</td>
+                <td>${i.qty}</td>
                 <td>${(i.price * i.qty).toFixed(2)}</td>
               </tr>
             `).join("")}
@@ -130,7 +127,7 @@ export default function Cashier() {
     win.print();
   };
 
-  // 💳 CHECKOUT
+  // 💳 Checkout (FIXED + SAFE)
   const checkout = async () => {
     if (cart.length === 0) {
       alert("Cart is empty!");
@@ -141,14 +138,19 @@ export default function Cashier() {
 
     if (customerName && customerPhone) {
       try {
-        const res = await API.post("accounts/customers/check_or_create/", {
-          name: customerName,
-          phone: customerPhone,
-        });
+        const res = await API.post(
+          "accounts/customers/check_or_create/",
+          {
+            name: customerName,
+            phone: customerPhone,
+          }
+        );
 
         customerId = res.data.id;
+
+        window.dispatchEvent(new Event("customerUpdated"));
       } catch (err) {
-        console.error(err);
+        console.error("Customer error:", err.response?.data || err.message);
       }
     }
 
@@ -169,56 +171,34 @@ export default function Cashier() {
       setCustomerName("");
       setCustomerPhone("");
 
-      await fetchProducts(); // 🔥 refresh stock after sale
-
       alert("Payment successful ✅");
 
     } catch (err) {
-      console.error(err);
+      console.error("Checkout error:", err.response?.data || err.message);
       alert(err.response?.data?.error || "Server error");
     }
   };
 
   return (
     <div className="pos">
-
-      {/* PRODUCTS */}
+      {/* Products */}
       <div className="products">
         <h2>🛒 Products</h2>
-
         <div className="grid">
-          {products.map(p => {
-            const isOut = p.stock_status === "OUT";
-            const isLow = p.stock_status === "LOW";
-
-            return (
-              <div
-                key={p.id}
-                className={`product 
-                  ${isOut ? "out" : ""}
-                  ${isLow ? "low" : ""}
-                `}
-                onClick={() => addToCart(p)}
-              >
-                <h3>{p.name}</h3>
-
-                <p>💰 {p.price} EGP</p>
-
-                <p style={{ fontSize: 12 }}>
-                  📦 {p.stock} {p.unit_type}
-                </p>
-
-                {isOut && <p style={{ color: "red" }}>❌ Out of stock</p>}
-                {isLow && !isOut && (
-                  <p style={{ color: "orange" }}>⚠️ Low stock</p>
-                )}
-              </div>
-            );
-          })}
+          {products.map(p => (
+            <div
+              key={p.id}
+              className="product fade-in"
+              onClick={() => addToCart(p)}
+            >
+              <h3>{p.name}</h3>
+              <p>{p.price}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* CART */}
+      {/* Cart */}
       <div className="cart">
         <h2>🧾 Cashier</h2>
 
@@ -241,14 +221,14 @@ export default function Cashier() {
           )}
         </div>
 
-        {/* CUSTOMER */}
+        {/* Customer */}
         <div className="customer-info">
+          <h3>Customer Info</h3>
           <input
-            placeholder="Customer Name"
+            placeholder="Name"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
           />
-
           <input
             placeholder="Phone"
             value={customerPhone}
@@ -256,27 +236,29 @@ export default function Cashier() {
           />
         </div>
 
-        {/* ITEMS */}
+        {/* Cart Items */}
         {cart.map(i => (
-          <div key={i.id} className="cart-item">
+          <div key={i.id} className="cart-item slide-in">
             <span>{i.name}</span>
 
-            <div>
+            <div className="qty-controls">
               <button onClick={() => decrease(i.id)}>➖</button>
-              <span>{i.qty} {i.unit}</span>
+              <span>{i.qty}</span>
               <button onClick={() => increase(i.id)}>➕</button>
             </div>
 
             <span>{(i.price * i.qty).toFixed(2)}</span>
 
-            <button onClick={() => removeItem(i.id)}>🗑</button>
+            <button className="delete" onClick={() => removeItem(i.id)}>
+              🗑
+            </button>
           </div>
         ))}
 
-        {/* SUMMARY */}
+        {/* Summary */}
         <div className="summary">
           <p>Subtotal: {subtotal.toFixed(2)}</p>
-          <p>Tax: {tax.toFixed(2)}</p>
+          <p>VAT: {tax.toFixed(2)}</p>
           <h2>Total: {total.toFixed(2)}</h2>
         </div>
 
