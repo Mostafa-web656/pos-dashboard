@@ -12,11 +12,6 @@ export default function Cashier() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
 
-  const [loading, setLoading] = useState(false);
-
-  // =========================
-  // LOAD SETTINGS
-  // =========================
   useEffect(() => {
     fetchProducts();
 
@@ -32,33 +27,16 @@ export default function Cashier() {
     localStorage.setItem("taxEnabled", taxEnabled);
   }, [taxRate, taxEnabled]);
 
-  // =========================
-  // FETCH PRODUCTS (SAFE)
-  // =========================
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-
       const res = await API.get("products/");
-
-      // 🔥 حماية من أي response غير متوقع
-      if (Array.isArray(res.data)) {
-        setProducts(res.data);
-      } else {
-        setProducts([]);
-      }
-
+      setProducts(res.data);
     } catch (err) {
-      console.error("Fetch products error:", err.response?.data || err.message);
-      setProducts([]); // مهم جدًا
-    } finally {
-      setLoading(false);
+      console.error("Fetch products error:", err);
     }
   };
 
-  // =========================
-  // ADD TO CART
-  // =========================
+  // ✅ FIXED: إضافة المنتج بشكل صحيح
   const addToCart = (product) => {
     const exist = cart.find((i) => i.id === product.id);
 
@@ -74,16 +52,13 @@ export default function Cashier() {
         {
           id: product.id,
           name: product.name,
-          price: Number(product.price || 0),
+          price: Number(product.price),
           qty: 1,
         },
       ]);
     }
   };
 
-  // =========================
-  // CART CONTROLS
-  // =========================
   const increase = (id) => {
     setCart(cart.map(i => i.id === id ? { ...i, qty: i.qty + 1 } : i));
   };
@@ -100,16 +75,11 @@ export default function Cashier() {
     setCart(cart.filter(i => i.id !== id));
   };
 
-  // =========================
-  // TOTALS
-  // =========================
   const subtotal = cart.reduce((a, b) => a + b.price * b.qty, 0);
   const tax = taxEnabled ? (subtotal * taxRate) / 100 : 0;
   const total = subtotal + tax;
 
-  // =========================
-  // PRINT INVOICE
-  // =========================
+  // 🧾 Print Invoice
   const printInvoice = () => {
     const date = new Date().toLocaleString();
     const win = window.open("", "PRINT", "width=400,height=600");
@@ -128,7 +98,6 @@ export default function Cashier() {
         <body>
           <h2>🧾 POS SYSTEM</h2>
           <p>${date}</p>
-
           ${customerName ? `<p>Customer: ${customerName} - ${customerPhone}</p>` : ""}
 
           <table>
@@ -158,19 +127,17 @@ export default function Cashier() {
     win.print();
   };
 
-  // =========================
-  // CHECKOUT (SAFE)
-  // =========================
+  // 💳 Checkout (FIXED + SAFE)
   const checkout = async () => {
     if (cart.length === 0) {
       alert("Cart is empty!");
       return;
     }
 
-    try {
-      let customerId = null;
+    let customerId = null;
 
-      if (customerName && customerPhone) {
+    if (customerName && customerPhone) {
+      try {
         const res = await API.post(
           "accounts/customers/check_or_create/",
           {
@@ -180,13 +147,19 @@ export default function Cashier() {
         );
 
         customerId = res.data.id;
+
+        window.dispatchEvent(new Event("customerUpdated"));
+      } catch (err) {
+        console.error("Customer error:", err.response?.data || err.message);
       }
+    }
 
-      const items = cart.map(i => ({
-        product_id: Number(i.id),
-        qty: Number(i.qty),
-      }));
+    const items = cart.map(i => ({
+      product_id: Number(i.id),
+      qty: Number(i.qty),
+    }));
 
+    try {
       await API.post("sales/create/", {
         items,
         customer: customerId,
@@ -194,7 +167,6 @@ export default function Cashier() {
       });
 
       printInvoice();
-
       setCart([]);
       setCustomerName("");
       setCustomerPhone("");
@@ -203,40 +175,33 @@ export default function Cashier() {
 
     } catch (err) {
       console.error("Checkout error:", err.response?.data || err.message);
-      alert("Checkout failed ❌");
+      alert(err.response?.data?.error || "Server error");
     }
   };
 
   return (
     <div className="pos">
-
-      {/* PRODUCTS */}
+      {/* Products */}
       <div className="products">
         <h2>🛒 Products</h2>
-
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <div className="grid">
-            {products.map(p => (
-              <div
-                key={p.id}
-                className="product"
-                onClick={() => addToCart(p)}
-              >
-                <h3>{p.name}</h3>
-                <p>{p.price}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="grid">
+          {products.map(p => (
+            <div
+              key={p.id}
+              className="product fade-in"
+              onClick={() => addToCart(p)}
+            >
+              <h3>{p.name}</h3>
+              <p>{p.price}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* CART */}
+      {/* Cart */}
       <div className="cart">
         <h2>🧾 Cashier</h2>
 
-        {/* TAX */}
         <div className="tax-control">
           <label>
             <input
@@ -256,10 +221,11 @@ export default function Cashier() {
           )}
         </div>
 
-        {/* CUSTOMER */}
+        {/* Customer */}
         <div className="customer-info">
+          <h3>Customer Info</h3>
           <input
-            placeholder="Customer Name"
+            placeholder="Name"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
           />
@@ -270,24 +236,26 @@ export default function Cashier() {
           />
         </div>
 
-        {/* ITEMS */}
+        {/* Cart Items */}
         {cart.map(i => (
-          <div key={i.id} className="cart-item">
+          <div key={i.id} className="cart-item slide-in">
             <span>{i.name}</span>
 
-            <div>
+            <div className="qty-controls">
               <button onClick={() => decrease(i.id)}>➖</button>
-              {i.qty}
+              <span>{i.qty}</span>
               <button onClick={() => increase(i.id)}>➕</button>
             </div>
 
             <span>{(i.price * i.qty).toFixed(2)}</span>
 
-            <button onClick={() => removeItem(i.id)}>🗑</button>
+            <button className="delete" onClick={() => removeItem(i.id)}>
+              🗑
+            </button>
           </div>
         ))}
 
-        {/* TOTAL */}
+        {/* Summary */}
         <div className="summary">
           <p>Subtotal: {subtotal.toFixed(2)}</p>
           <p>VAT: {tax.toFixed(2)}</p>
