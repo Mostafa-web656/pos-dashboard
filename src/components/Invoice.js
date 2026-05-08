@@ -2,29 +2,105 @@ import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
 export default function InvoicePage() {
+
   const [invoices, setInvoices] = useState([]);
   const [invoice, setInvoice] = useState(null);
 
+  // 🔍 SEARCH
+  const [search, setSearch] = useState("");
+
+  // 📅 DATE FILTER
+  const [dateFilter, setDateFilter] = useState("");
+
   useEffect(() => {
+
     api.get("sales/invoices/")
       .then(res => setInvoices(res.data))
       .catch(err => console.log(err));
+
   }, []);
 
   const openInvoice = (id) => {
+
     api.get(`sales/invoices/${id}/`)
       .then(res => setInvoice(res.data))
       .catch(err => console.log(err));
+
   };
 
+  // 🔥 FILTER LOGIC
+  const filteredInvoices = invoices.filter((inv) => {
+
+    const customer =
+      inv.customer_name || "";
+
+    const matchesSearch =
+
+      customer
+        .toLowerCase()
+        .includes(search.toLowerCase())
+
+      ||
+
+      inv.id
+        .toString()
+        .includes(search);
+
+    const matchesDate =
+
+      !dateFilter ||
+
+      inv.date.startsWith(dateFilter);
+
+    return matchesSearch && matchesDate;
+
+  });
+
   return (
-    <div style={{ display: "flex", gap: 20, padding: 20 }}>
+
+    <div style={{
+      display: "flex",
+      gap: 20,
+      padding: 20
+    }}>
 
       {/* LEFT: LIST */}
       <div style={{ width: "40%" }}>
+
         <h2>🧾 Invoices</h2>
 
-        {invoices.map(inv => (
+        {/* 🔍 SEARCH INPUT */}
+        <input
+          type="text"
+          placeholder="Search invoice or customer..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginBottom: 10,
+            borderRadius: 8,
+            border: "1px solid #ccc"
+          }}
+        />
+
+        {/* 📅 DATE FILTER */}
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginBottom: 15,
+            borderRadius: 8,
+            border: "1px solid #ccc"
+          }}
+        />
+
+        {/* 🔥 INVOICES */}
+        {filteredInvoices.map(inv => (
+
           <div
             key={inv.id}
             onClick={() => openInvoice(inv.id)}
@@ -36,11 +112,23 @@ export default function InvoicePage() {
               borderRadius: 8
             }}
           >
-            <b>Invoice #{inv.id}</b>
-            <div>{inv.customer_name || "Walk-in"}</div>
-            <div>{inv.total} EGP</div>
+
+            <b>
+              Invoice #{inv.id}
+            </b>
+
+            <div>
+              {inv.customer_name || "Walk-in"}
+            </div>
+
+            <div>
+              {inv.total} EGP
+            </div>
+
           </div>
+
         ))}
+
       </div>
 
       {/* RIGHT: INVOICE UI */}
@@ -53,49 +141,86 @@ export default function InvoicePage() {
       }}>
 
         {!invoice ? (
-          <h3>👈 اختر فاتورة</h3>
-        ) : (
-          <>
-            <h2 style={{ textAlign: "center" }}>🧾 POS SYSTEM</h2>
 
-            <p style={{ textAlign: "center", color: "gray" }}>
+          <h3>
+            👈 اختر فاتورة
+          </h3>
+
+        ) : (
+
+          <>
+            <h2 style={{ textAlign: "center" }}>
+              🧾 POS SYSTEM
+            </h2>
+
+            <p style={{
+              textAlign: "center",
+              color: "gray"
+            }}>
               {invoice.date}
             </p>
 
             <hr />
 
             <p>
-              <b>Customer:</b> {invoice.customer_name || "Walk-in"}
+              <b>Customer:</b>{" "}
+              {invoice.customer_name || "Walk-in"}
             </p>
 
             <hr />
 
             {/* ITEMS */}
-            {invoice.items.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "5px 0"
-                }}
-              >
-                <span>
-                  {item.name} × {item.qty}
-                </span>
+            {invoice?.items?.length > 0 ? (
 
-                <span>{item.total} EGP</span>
-              </div>
-            ))}
+              invoice.items.map((item, i) => (
+
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "5px 0"
+                  }}
+                >
+
+                  <span>
+                    {item.name} × {item.qty}
+                  </span>
+
+                  <span>
+                    {item.total} EGP
+                  </span>
+
+                </div>
+
+              ))
+
+            ) : (
+
+              <p>
+                No items found
+              </p>
+
+            )}
 
             <hr />
 
             <div style={{ textAlign: "right" }}>
-              <p>Subtotal: {invoice.total}</p>
-              <p>VAT: 0.00</p>
 
-              <h2>Total: {invoice.total} EGP</h2>
+              <p>
+                Subtotal: {invoice.subtotal} EGP
+              </p>
+
+              <p>
+                VAT: {invoice.tax_amount} EGP
+              </p>
+
+              <h2>
+                Total: {invoice.total} EGP
+              </h2>
+
             </div>
+
           </>
         )}
       </div>
