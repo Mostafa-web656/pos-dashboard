@@ -37,14 +37,8 @@ export default function InvoicePage() {
             }}
           >
             <b>Invoice #{inv.id}</b>
-
-            <div>
-              {inv.customer_name || "Walk-in"}
-            </div>
-
-            <div>
-              {inv.total} EGP
-            </div>
+            <div>{inv.customer_name || "Walk-in"}</div>
+            <div>{inv.total} EGP</div>
           </div>
         ))}
       </div>
@@ -59,15 +53,10 @@ export default function InvoicePage() {
       }}>
 
         {!invoice ? (
-
           <h3>👈 اختر فاتورة</h3>
-
         ) : (
-
           <>
-            <h2 style={{ textAlign: "center" }}>
-              🧾 POS SYSTEM
-            </h2>
+            <h2 style={{ textAlign: "center" }}>🧾 POS SYSTEM</h2>
 
             <p style={{ textAlign: "center", color: "gray" }}>
               {invoice.date}
@@ -76,62 +65,37 @@ export default function InvoicePage() {
             <hr />
 
             <p>
-              <b>Customer:</b>{" "}
-              {invoice.customer_name || "Walk-in"}
+              <b>Customer:</b> {invoice.customer_name || "Walk-in"}
             </p>
 
             <hr />
 
             {/* ITEMS */}
-            {invoice?.items?.length > 0 ? (
+            {invoice.items.map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "5px 0"
+                }}
+              >
+                <span>
+                  {item.name} × {item.qty}
+                </span>
 
-              invoice.items.map((item, i) => (
-
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "5px 0"
-                  }}
-                >
-
-                  <span>
-                    {item.name} × {item.qty}
-                  </span>
-
-                  <span>
-                    {item.total} EGP
-                  </span>
-
-                </div>
-
-              ))
-
-            ) : (
-
-              <p>No items found</p>
-
-            )}
+                <span>{item.total} EGP</span>
+              </div>
+            ))}
 
             <hr />
 
             <div style={{ textAlign: "right" }}>
+              <p>Subtotal: {invoice.total}</p>
+              <p>VAT: 0.00</p>
 
-              <p>
-                Subtotal: {invoice.subtotal} EGP
-              </p>
-
-              <p>
-                VAT: {invoice.tax_amount} EGP
-              </p>
-
-              <h2>
-                Total: {invoice.total} EGP
-              </h2>
-
+              <h2>Total: {invoice.total} EGP</h2>
             </div>
-
           </>
         )}
       </div>
