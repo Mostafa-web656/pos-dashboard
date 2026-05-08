@@ -2,258 +2,128 @@ import React, { useEffect, useState } from "react";
 import api from "../api/api";
 
 export default function InvoicePage() {
-
   const [invoices, setInvoices] = useState([]);
   const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  // =========================
-  // LOAD INVOICES
-  // =========================
   useEffect(() => {
-
-    fetchInvoices();
-
+    api.get("sales/invoices/")
+      .then(res => setInvoices(res.data))
+      .catch(err => console.log(err));
   }, []);
 
-  const fetchInvoices = async () => {
-
-    try {
-
-      const res = await api.get("sales/invoices/");
-
-      setInvoices(res.data);
-
-    } catch (err) {
-
-      console.log(err.response?.data || err.message);
-
-    }
-  };
-
-  // =========================
-  // OPEN SINGLE INVOICE
-  // =========================
-  const openInvoice = async (id) => {
-
-    try {
-
-      setLoading(true);
-
-      const res = await api.get(`sales/invoices/${id}/`);
-
-      console.log(res.data);
-
-      setInvoice(res.data);
-
-    } catch (err) {
-
-      console.log(err.response?.data || err.message);
-
-    } finally {
-
-      setLoading(false);
-
-    }
+  const openInvoice = (id) => {
+    api.get(`sales/invoices/${id}/`)
+      .then(res => setInvoice(res.data))
+      .catch(err => console.log(err));
   };
 
   return (
+    <div style={{ display: "flex", gap: 20, padding: 20 }}>
 
-    <div
-      style={{
-        display: "flex",
-        gap: 20,
-        padding: 20,
-        background: "#f8fafc",
-        minHeight: "100vh"
-      }}
-    >
+      {/* LEFT: LIST */}
+      <div style={{ width: "40%" }}>
+        <h2>🧾 Invoices</h2>
 
-      {/* =========================
-          LEFT SIDE
-      ========================= */}
-
-      <div
-        style={{
-          width: "35%",
-          background: "white",
-          padding: 20,
-          borderRadius: 12,
-          border: "1px solid #ddd"
-        }}
-      >
-
-        <h2 style={{ marginBottom: 20 }}>
-          🧾 Invoices
-        </h2>
-
-        {invoices.length === 0 && (
-          <p>No invoices found</p>
-        )}
-
-        {invoices.map((inv) => (
-
+        {invoices.map(inv => (
           <div
             key={inv.id}
             onClick={() => openInvoice(inv.id)}
             style={{
-              padding: 15,
-              marginBottom: 12,
-              background: "#f1f5f9",
-              borderRadius: 10,
+              padding: 10,
+              marginBottom: 10,
+              background: "#f1f1f1",
               cursor: "pointer",
-              border: "1px solid #ddd"
+              borderRadius: 8
             }}
           >
+            <b>Invoice #{inv.id}</b>
 
-            <h4 style={{ margin: 0 }}>
-              Invoice #{inv.id}
-            </h4>
-
-            <p style={{ margin: "5px 0" }}>
+            <div>
               {inv.customer_name || "Walk-in"}
-            </p>
+            </div>
 
-            <p style={{ margin: 0 }}>
+            <div>
               {inv.total} EGP
-            </p>
-
+            </div>
           </div>
         ))}
-
       </div>
 
-      {/* =========================
-          RIGHT SIDE
-      ========================= */}
-
-      <div
-        style={{
-          width: "65%",
-          background: "white",
-          padding: 25,
-          borderRadius: 12,
-          border: "1px solid #ddd"
-        }}
-      >
+      {/* RIGHT: INVOICE UI */}
+      <div style={{
+        width: "60%",
+        background: "#fff",
+        padding: 20,
+        borderRadius: 10,
+        border: "1px solid #ddd"
+      }}>
 
         {!invoice ? (
 
-          <h3>
-            👈 اختر فاتورة
-          </h3>
-
-        ) : loading ? (
-
-          <h3>Loading...</h3>
+          <h3>👈 اختر فاتورة</h3>
 
         ) : (
 
           <>
+            <h2 style={{ textAlign: "center" }}>
+              🧾 POS SYSTEM
+            </h2>
 
-            {/* HEADER */}
-
-            <div style={{ textAlign: "center" }}>
-
-              <h1>
-                🧾 POS SYSTEM
-              </h1>
-
-              <p style={{ color: "gray" }}>
-                {invoice.date}
-              </p>
-
-            </div>
+            <p style={{ textAlign: "center", color: "gray" }}>
+              {invoice.date}
+            </p>
 
             <hr />
 
-            {/* CUSTOMER */}
-
-            <div style={{ marginBottom: 20 }}>
-
-              <p>
-                <b>Customer:</b>{" "}
-                {invoice.customer_name || "Walk-in"}
-              </p>
-
-              <p>
-                <b>Phone:</b>{" "}
-                {invoice.customer_phone || "-"}
-              </p>
-
-            </div>
+            <p>
+              <b>Customer:</b>{" "}
+              {invoice.customer_name || "Walk-in"}
+            </p>
 
             <hr />
 
             {/* ITEMS */}
+            {invoice?.items?.length > 0 ? (
 
-            <div style={{ marginTop: 20 }}>
+              invoice.items.map((item, i) => (
 
-              <h3>
-                Items
-              </h3>
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "5px 0"
+                  }}
+                >
 
-              {!invoice?.items?.length ? (
+                  <span>
+                    {item.name} × {item.qty}
+                  </span>
 
-                <p>No items found</p>
+                  <span>
+                    {item.total} EGP
+                  </span>
 
-              ) : (
+                </div>
 
-                invoice.items.map((item, i) => (
+              ))
 
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "10px 0",
-                      borderBottom: "1px solid #eee"
-                    }}
-                  >
+            ) : (
 
-                    <div>
+              <p>No items found</p>
 
-                      <div>
-                        {item.name}
-                      </div>
-
-                      <small>
-                        Qty: {item.qty}
-                      </small>
-
-                    </div>
-
-                    <div>
-                      {item.total} EGP
-                    </div>
-
-                  </div>
-
-                ))
-
-              )}
-
-            </div>
+            )}
 
             <hr />
 
-            {/* TOTALS */}
-
-            <div
-              style={{
-                marginTop: 20,
-                textAlign: "right"
-              }}
-            >
+            <div style={{ textAlign: "right" }}>
 
               <p>
-                <b>Subtotal:</b>{" "}
-                {invoice.subtotal} EGP
+                Subtotal: {invoice.subtotal} EGP
               </p>
 
               <p>
-                <b>VAT:</b>{" "}
-                {invoice.tax_amount} EGP
+                VAT: {invoice.tax_amount} EGP
               </p>
 
               <h2>
@@ -263,11 +133,81 @@ export default function InvoicePage() {
             </div>
 
           </>
-
         )}
-
       </div>
-
     </div>
   );
 }
+
+// 🎨 Styles
+const styles = {
+  container: {
+    padding: 30,
+    background: "#0f172a",
+    minHeight: "100vh",
+    color: "white",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  search: {
+    width: "100%",
+    padding: 12,
+    marginBottom: 20,
+    borderRadius: 10,
+    border: "none",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))",
+    gap: 15,
+  },
+  card: {
+    background: "#1f2937",
+    padding: 20,
+    borderRadius: 15,
+    cursor: "pointer",
+  },
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0,0,0,0.7)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modal: {
+    background: "white",
+    color: "black",
+    padding: 25,
+    width: 400,
+    borderRadius: 15,
+  },
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  print: {
+    width: "100%",
+    padding: 12,
+    marginTop: 10,
+    background: "#22c55e",
+    border: "none",
+    borderRadius: 10,
+    color: "white",
+  },
+  close: {
+    width: "100%",
+    padding: 12,
+    marginTop: 10,
+    background: "red",
+    border: "none",
+    borderRadius: 10,
+    color: "white",
+  },
+};
